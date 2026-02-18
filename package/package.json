@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated-drawer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A configurable React Native drawer component powered by Reanimated and Gesture Handler.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,6 +20,14 @@
     "drawer",
     "reanimated"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rithik-raja/react-native-reanimated-drawer.git"
+  },
+  "homepage": "https://github.com/rithik-raja/react-native-reanimated-drawer#readme",
+  "bugs": {
+    "url": "https://github.com/rithik-raja/react-native-reanimated-drawer/issues"
+  },
   "license": "MIT",
   "peerDependencies": {
     "react": ">=18",
