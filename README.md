@@ -2,6 +2,14 @@
 
 A configurable React Native drawer component powered by Reanimated and Gesture Handler.
 
+<table>
+  <tr>
+    <td>
+      <video src="https://github.com/user-attachments/assets/974cd293-2065-49ab-96a6-e0181fdc1bf5" width="1170" height="2532" controls></video>
+    </td>
+  </tr>
+</table>
+
 ## Features
 
 - Left or right drawer
