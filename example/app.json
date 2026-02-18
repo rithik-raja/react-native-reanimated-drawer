@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "name": "Drawer Demo",
+    "slug": "drawer-demo",
+    "version": "1.0.0",
+    "orientation": "portrait"
+  }
+}
