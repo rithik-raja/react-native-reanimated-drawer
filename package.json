@@ -3,5 +3,9 @@
   "workspaces": [
     "package",
     "example"
-  ]
+  ],
+  "scripts": {
+    "build:package": "npm run -w react-native-reanimated-drawer build",
+    "start:example": "npm run -w react-native-reanimated-drawer-example start"
+  }
 }

@@ -3,19 +3,18 @@ import {
   Pressable,
   StyleSheet,
   useWindowDimensions,
-  View,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
   type EasingFunction,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export interface DrawerProps {
   isOpen: boolean;
@@ -33,12 +32,12 @@ export interface DrawerProps {
   closeVelocityThreshold?: number;
   closeDragThreshold?: number;
   onAnimationEnd?: (state: 'open' | 'closed') => void;
-  onOverlayPress?: () => void;
+  onOverlayPress?: (() => void) | null;
 }
 
-const DEFAULT_DRAWER_WIDTH = (screenWidth: number) => screenWidth * 0.85;
-const DEFAULT_DURATION_MS = 150;
-const DEFAULT_OVERLAY_OPACITY = 0.8;
+const DEFAULT_DRAWER_WIDTH = (screenWidth: number) => screenWidth * 0.8;
+const DEFAULT_DURATION_MS = 200;
+const DEFAULT_OVERLAY_OPACITY = 0.6;
 const DEFAULT_Z_INDEX = 10;
 const DEFAULT_CLOSE_VELOCITY_THRESHOLD = 500;
 const DEFAULT_CLOSE_DRAG_THRESHOLD = 0.5;
@@ -85,26 +84,24 @@ const Drawer: React.FC<DrawerProps> = ({
         if (!finished || !onAnimationEnd) {
           return;
         }
-        runOnJS(onAnimationEnd)(isOpen ? 'open' : 'closed');
+        scheduleOnRN(onAnimationEnd, isOpen ? 'open' : 'closed');
     });
   }, [isOpen, durationMs, easing]);
 
   const animatedDrawerStyle = useAnimatedStyle(() => {
     const direction = side === 'left' ? -1 : 1;
     const offset = (1 - animationProgress.value) * resolvedDrawerWidth;
-
+    const isClosed = animationProgress.value <= CLOSED_EPSILON;
     return {
       transform: [{ translateX: direction * offset }],
       width: resolvedDrawerWidth,
+      opacity: isClosed ? 0 : 1,
     };
   });
 
   const animatedOverlayStyle = useAnimatedStyle(() => {
-    const isClosed = animationProgress.value <= CLOSED_EPSILON;
-
     return {
       opacity: animationProgress.value * overlayOpacity,
-      display: isClosed ? 'none' : 'flex',
     };
   });
 
@@ -132,7 +129,7 @@ const Drawer: React.FC<DrawerProps> = ({
             signedTranslation > dragThresholdPx;
 
           if (shouldClose) {
-            runOnJS(onClose)();
+            scheduleOnRN(onClose);
           } else {
             animationProgress.value = withTiming(
               1,
@@ -154,10 +151,11 @@ const Drawer: React.FC<DrawerProps> = ({
   );
 
   const handleOverlayPress = () => {
-    onOverlayPress?.();
-    onClose();
+    if (onOverlayPress !== null) {
+      onOverlayPress ? onOverlayPress() : onClose();
+    }
   };
-
+  
   return (
     <>
       <Animated.View
@@ -170,9 +168,7 @@ const Drawer: React.FC<DrawerProps> = ({
           overlayStyle,
         ]}
       >
-        <Pressable onPress={handleOverlayPress} style={styles.fill}>
-          <View style={styles.fill} />
-        </Pressable>
+        <Pressable onPress={handleOverlayPress} style={styles.fill} />
       </Animated.View>
 
       <GestureDetector gesture={panGesture}>
@@ -195,6 +191,7 @@ const Drawer: React.FC<DrawerProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'black',
   },
   fill: {
     flex: 1,
@@ -203,6 +200,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     bottom: 0,
+    backgroundColor: 'white',
   },
 });
 

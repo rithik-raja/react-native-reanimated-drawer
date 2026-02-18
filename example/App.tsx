@@ -3,26 +3,66 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Drawer, DrawerProps } from 'react-native-reanimated-drawer';
 import { Alert } from 'react-native';
+import { Easing } from 'react-native-reanimated';
 
-interface _DemoConfig extends DrawerProps {
-  id: number;
+type DemoConfig = Omit<DrawerProps, "isOpen" | "onClose" | "children"> & {
   label: string;
+  description: string;
 };
-type DemoConfig = Omit<_DemoConfig, "isOpen" | "onClose" | "children">
 
 const DEMOS: DemoConfig[] = [
-  { id: 1, label: '1', drawerWidth: 220, side: 'left', overlayOpacity: 0.4 },
-  { id: 2, label: '2', drawerWidth: 280, side: 'left', overlayOpacity: 0.6 },
-  { id: 3, label: '3', drawerWidth: 250, side: 'right', overlayOpacity: 0.5, onAnimationEnd: (state) => { Alert.alert(`"${state}" animation complete`); }},
+  {
+    label: 'Default Left',
+    description: 'Baseline behavior with left-side drawer and default interactions.',
+  },
+  {
+    label: 'Right + Callback',
+    description: 'Right-side drawer with animation-end callback.',
+    side: 'right',
+    onAnimationEnd: (state) => {
+      Alert.alert(`Animation finished: ${state}`);
+    },
+  },
+  {
+    label: 'Styled',
+    description: 'Custom drawer + overlay color',
+    drawerWidth: 260,
+    drawerStyle: { backgroundColor: '#b2b0f7', boxShadow: '10px 0 10px -5px #555' },
+    overlayStyle: { backgroundColor: '#04006e' },
+    overlayOpacity: 0.35,
+  },
+  {
+    label: 'Slow + No Swipe',
+    description: 'Gesture close disabled with slower animation and custom easing.',
+    swipeToClose: false,
+    durationMs: 1000,
+    easing: Easing.inOut(Easing.cubic),
+  },
+  {
+    label: 'High Thresholds',
+    description: 'Requires strong swipe velocity or deep drag to close.',
+    closeVelocityThreshold: 1300,
+    closeDragThreshold: 0.8,
+    onOverlayPress: () => {
+      Alert.alert('Overlay pressed');
+    },
+  },
+  {
+    label: 'Override Overlay',
+    description: 'Override overlay press behavior and show a custom alert.',
+    onOverlayPress: () => {
+      Alert.alert('Overlay pressed');
+    },
+  },
 ];
 
 export default function App() {
-  const [selectedDemoId, setSelectedDemoId] = useState(DEMOS[0].id);
+  const [selectedDemoLabel, setSelectedDemoLabel] = useState(DEMOS[0].label);
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedDemo = useMemo(
-    () => DEMOS.find((item) => item.id === selectedDemoId) ?? DEMOS[0],
-    [selectedDemoId],
+    () => DEMOS.find((item) => item.label === selectedDemoLabel) ?? DEMOS[0],
+    [selectedDemoLabel],
   );
 
   return (
@@ -32,13 +72,13 @@ export default function App() {
 
         <View style={styles.optionsRow}>
           {DEMOS.map((demo) => {
-            const selected = demo.id === selectedDemo.id;
+            const selected = demo.label === selectedDemo.label;
 
             return (
               <Pressable
-                key={demo.id}
+                key={demo.label}
                 onPress={() => {
-                  setSelectedDemoId(demo.id);
+                  setSelectedDemoLabel(demo.label);
                   setIsOpen(false);
                 }}
                 style={[styles.demoButton, selected && styles.demoButtonSelected]}
@@ -51,9 +91,11 @@ export default function App() {
           })}
         </View>
 
-        <Text style={styles.argumentsText}>
-          {"temp"}
-        </Text>
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.descriptionText}>
+            {selectedDemo.description}
+          </Text>
+        </View>
 
         <Pressable style={styles.openButton} onPress={() => setIsOpen(true)}>
           <Text style={styles.openButtonText}>Open Drawer</Text>
@@ -97,17 +139,20 @@ const styles = StyleSheet.create({
   },
   optionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 12,
   },
   demoButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    minWidth: 120,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#bbd3ff',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   demoButtonSelected: {
     backgroundColor: '#0d6efd',
@@ -116,11 +161,15 @@ const styles = StyleSheet.create({
   demoButtonText: {
     color: '#0d6efd',
     fontWeight: '700',
+    fontSize: 12,
   },
   demoButtonTextSelected: {
     color: '#ffffff',
   },
-  argumentsText: {
+  descriptionContainer: {
+    minHeight: 40,
+  },
+  descriptionText: {
     fontSize: 14,
     lineHeight: 20,
     color: '#2f3d4f',
@@ -139,7 +188,6 @@ const styles = StyleSheet.create({
   },
   drawerContent: {
     flex: 1,
-    backgroundColor: '#ffffff',
     paddingTop: 72,
     paddingHorizontal: 20,
     gap: 12,
